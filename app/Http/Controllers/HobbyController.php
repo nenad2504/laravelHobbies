@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Hobby;
 use Illuminate\Http\Request;
+use App\Http\Requests\HobbyRequest;
 
 class HobbyController extends Controller
 {
@@ -15,10 +16,10 @@ class HobbyController extends Controller
     public function index()
     {
         $hobbies = Hobby::all();
-
-        foreach($hobbies as $hobby){
-            return $hobby->description;
-        }
+        return view('hobby.index')->with([
+            'hobbies' => $hobbies
+        ]);
+        // return view('hobby.index', compact('hobbies'));  Second way
     }
 
     /**
@@ -28,7 +29,7 @@ class HobbyController extends Controller
      */
     public function create()
     {
-        //
+        return view('hobby.create');
     }
 
     /**
@@ -37,9 +38,28 @@ class HobbyController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(HobbyRequest $request)
     {
-        //
+        // $request->validate([
+        //     'name' => 'required|min:3',
+        //     'description' => 'required|min:5',  This is one way validation
+        // ]);
+
+        $hobby = new Hobby([
+            'name' => $request['name'],
+            'description' => $request['description']
+        ]);
+        $hobby->save();
+
+        if($hobby) {
+            $request->session()->put('hobby', $hobby);
+
+            return $this->index();
+        }
+        else {
+            return redirect()->back()->with('message', 'Uneti podaci ne postoje u našoj bazi!')->withInput();
+        }
+        
     }
 
     /**
